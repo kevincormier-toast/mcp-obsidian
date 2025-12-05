@@ -255,12 +255,12 @@ class PatchContentToolHandler(ToolHandler):
                        "enum": ["heading", "block", "frontmatter"]
                    },
                    "target": {
-                       "type": "string", 
-                       "description": "Target identifier (heading path, block reference, or frontmatter field)"
+                       "type": "string",
+                       "description": "Target identifier. FOR HEADINGS - READ FILE FIRST, then build path: (1) ALWAYS start with the TOP LEVEL h1 heading (the '# ' heading). (2) Use '::' separator between each level. (3) Include EVERY heading level from h1 down to target. EXAMPLE: File has '# Top Level' then '## Section A' then '### Subsection A1'. To target Subsection A1, you MUST use 'Top Level::Section A::Subsection A1'. WRONG: 'Subsection A1' (missing parents). WRONG: 'Section A::Subsection A1' (missing h1). CORRECT: 'Top Level::Section A::Subsection A1' (complete path from h1). For block references use '^block-id'. For frontmatter use field name."
                    },
                    "content": {
                        "type": "string",
-                       "description": "Content to insert"
+                       "description": "Content to insert. MANDATORY: ALWAYS end with '\\n' newline character. When operation='replace' with target_type='heading': (1) Do NOT include heading markup (###) - only content. (2) MUST end with '\\n' or next heading will break. EXAMPLES: WRONG: 'New content' (no newline). WRONG: 'New content here' (no newline). CORRECT: 'New content\\n'. CORRECT: 'New content here\\n'. CORRECT: 'Line 1\\nLine 2\\n'. The trailing \\n is NOT optional - it prevents document corruption."
                    }
                },
                "required": ["filepath", "operation", "target_type", "target", "content"]
