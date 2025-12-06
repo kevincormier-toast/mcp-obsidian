@@ -17,6 +17,7 @@ The server implements multiple tools to interact with Obsidian:
 - patch_content: Insert content into an existing note relative to a heading, block reference, or frontmatter field.
 - append_content: Append content to a new or existing file in the vault.
 - delete_file: Delete a file or directory from your vault.
+- journal_entry: (Optional) Create reflective journal entries with structured metadata for capturing decisions, learnings, and insights during agent workflows.
 
 ### Example prompts
 
@@ -64,6 +65,14 @@ Note:
 - You can find the API key in the Obsidian plugin config
 - Default port is 27124 if not specified
 - Default host is 127.0.0.1 if not specified
+
+### Optional: Journaling Feature
+
+The journaling tool automates the mechanical parts of logging (timestamps, formatting, file organization) so LLMs can focus on content. Gated behind a feature flag because it requires thoughtful prompting to be valuable.
+
+**To enable:** Add `OBSIDIAN_ENABLE_JOURNALING=true` to your environment variables.
+
+**Why use this?** Helps with rubber duck debugging, cross-session continuity, and post-project synthesis. See [JOURNALING.md](JOURNALING.md) for detailed guidance on getting value from agent journaling.
 
 ## Quickstart
 

@@ -55,6 +55,11 @@ add_tool_handler(tools.PeriodicNotesToolHandler())
 add_tool_handler(tools.RecentPeriodicNotesToolHandler())
 add_tool_handler(tools.RecentChangesToolHandler())
 
+# Journaling tool is opt-in via environment variable
+if os.getenv("OBSIDIAN_ENABLE_JOURNALING") == "true":
+    add_tool_handler(tools.JournalEntryToolHandler())
+    logger.info("Journaling tool enabled")
+
 @app.list_tools()
 async def list_tools() -> list[Tool]:
     """List available tools."""
