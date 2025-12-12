@@ -65,6 +65,7 @@ Note:
 - You can find the API key in the Obsidian plugin config
 - Default port is 27124 if not specified
 - Default host is 127.0.0.1 if not specified
+- **IMPORTANT**: When using file paths (like `--env-file` or `OBSIDIAN_SSL_CERT_PATH`), always use full absolute paths like `/Users/username/...` instead of `~/...` - tilde expansion may not work correctly in all contexts
 
 ### Optional: Custom SSL Certificate
 
@@ -133,6 +134,32 @@ For large vaults (many files or large files), the simple search can return exces
   }
 }
 ```
+
+### Optional: Debug Logging
+
+Enable detailed debug logging to troubleshoot connection issues, SSL certificate problems, or API errors. Debug logs include:
+- Environment configuration and SSL cert setup
+- MCP tool calls (requests and responses)
+- API requests and detailed error messages
+- Full stack traces for errors
+
+**To enable:** Add `OBSIDIAN_DEBUG_LOG=/path/to/debug.log` to your environment variables.
+
+**Example configuration:**
+```json
+{
+  "env": {
+    "OBSIDIAN_API_KEY": "<your_api_key_here>",
+    "OBSIDIAN_HOST": "<your_obsidian_host>",
+    "OBSIDIAN_PORT": "<your_obsidian_port>",
+    "OBSIDIAN_DEBUG_LOG": "/tmp/mcp-obsidian-debug.log"
+  }
+}
+```
+
+**Why use this?** MCP servers use stdio for communication, making it difficult to debug connection or SSL issues. This feature logs all diagnostic information to a separate file without interfering with the MCP protocol.
+
+**Tip:** Use `tail -f /tmp/mcp-obsidian-debug.log` in a separate terminal to watch logs in real-time.
 
 ## Quickstart
 
