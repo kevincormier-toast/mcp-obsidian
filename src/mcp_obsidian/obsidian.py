@@ -1,11 +1,13 @@
 import requests
 import urllib.parse
 import os
+import base64
+import tempfile
 from typing import Any
 
 class Obsidian():
     def __init__(
-            self, 
+            self,
             api_key: str,
             protocol: str = os.getenv('OBSIDIAN_PROTOCOL', 'https').lower(),
             host: str = str(os.getenv('OBSIDIAN_HOST', '127.0.0.1')),
@@ -13,7 +15,7 @@ class Obsidian():
             verify_ssl: bool = False,
         ):
         self.api_key = api_key
-        
+
         if protocol == 'http':
             self.protocol = 'http'
         else:
@@ -21,8 +23,44 @@ class Obsidian():
 
         self.host = host
         self.port = port
-        self.verify_ssl = verify_ssl
+
+        # Handle SSL certificate configuration
+        self.temp_cert_file = None
+        cert_base64 = os.getenv("OBSIDIAN_SSL_CERT_BASE64")
+        cert_path = os.getenv("OBSIDIAN_SSL_CERT_PATH")
+
+        if cert_base64:
+            # Decode base64 certificate and write to temporary file
+            try:
+                cert_data = base64.b64decode(cert_base64)
+                # Create a temporary file that persists
+                temp_file = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.pem')
+                temp_file.write(cert_data)
+                temp_file.close()
+                self.temp_cert_file = temp_file.name
+                self.verify_ssl = temp_file.name
+            except Exception as e:
+                raise ValueError(f"Failed to decode OBSIDIAN_SSL_CERT_BASE64: {str(e)}")
+        elif cert_path:
+            # Validate certificate file exists
+            if os.path.exists(cert_path):
+                self.verify_ssl = cert_path
+            else:
+                raise FileNotFoundError(f"SSL certificate file not found: {cert_path}")
+        else:
+            # No certificate provided, use default behavior
+            self.verify_ssl = verify_ssl
+
         self.timeout = (3, 6)
+
+    def __del__(self):
+        """Clean up temporary certificate file if it exists."""
+        if self.temp_cert_file and os.path.exists(self.temp_cert_file):
+            try:
+                os.unlink(self.temp_cert_file)
+            except Exception:
+                # Silently ignore cleanup errors
+                pass
 
     def get_base_url(self) -> str:
         return f'{self.protocol}://{self.host}:{self.port}'

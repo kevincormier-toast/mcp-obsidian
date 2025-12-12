@@ -66,6 +66,48 @@ Note:
 - Default port is 27124 if not specified
 - Default host is 127.0.0.1 if not specified
 
+### Optional: Custom SSL Certificate
+
+By default, SSL certificate verification is disabled (`verify=False`). To use a custom SSL certificate for the Obsidian REST API connection without adding it to your system keychain, you have two options:
+
+**Option 1: Base64-encoded certificate (recommended)**
+
+Download the certificate from your Obsidian Local REST API plugin, encode it as base64, and provide it via environment variable:
+
+```bash
+# Encode your certificate
+base64 -i /path/to/cert.pem | tr -d '\n' > cert.base64
+
+# Add to your MCP configuration
+{
+  "env": {
+    "OBSIDIAN_API_KEY": "<your_api_key_here>",
+    "OBSIDIAN_HOST": "<your_obsidian_host>",
+    "OBSIDIAN_PORT": "<your_obsidian_port>",
+    "OBSIDIAN_SSL_CERT_BASE64": "<contents_of_cert.base64>"
+  }
+}
+```
+
+**Option 2: Path to certificate file**
+
+Alternatively, provide the path to your certificate file:
+
+```json
+{
+  "env": {
+    "OBSIDIAN_API_KEY": "<your_api_key_here>",
+    "OBSIDIAN_HOST": "<your_obsidian_host>",
+    "OBSIDIAN_PORT": "<your_obsidian_port>",
+    "OBSIDIAN_SSL_CERT_PATH": "/path/to/cert.pem"
+  }
+}
+```
+
+**Why use this?** Avoids having to add the certificate to your system keychain and mark it as globally trusted. The certificate is only used for this specific connection.
+
+**Certificate source:** Download the certificate from the Obsidian Local REST API plugin settings (usually available at `https://127.0.0.1:27124/` in your browser - look for the certificate download or export option).
+
 ### Optional: Journaling Feature
 
 The journaling tool automates the mechanical parts of logging (timestamps, formatting, file organization) so LLMs can focus on content. Gated behind a feature flag because it requires thoughtful prompting to be valuable.
