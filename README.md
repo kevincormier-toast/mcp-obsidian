@@ -74,6 +74,24 @@ The journaling tool automates the mechanical parts of logging (timestamps, forma
 
 **Why use this?** Helps with rubber duck debugging, cross-session continuity, and post-project synthesis. See [JOURNALING.md](JOURNALING.md) for detailed guidance on getting value from agent journaling.
 
+### Optional: Disable Simple Search
+
+For large vaults (many files or large files), the simple search can return excessive context that overwhelms token limits. Use this to disable simple search and rely on complex search instead.
+
+**To disable:** Add `OBSIDIAN_DISABLE_SIMPLE_SEARCH=true` to your environment variables.
+
+**Example configuration:**
+```json
+{
+  "env": {
+    "OBSIDIAN_API_KEY": "<your_api_key_here>",
+    "OBSIDIAN_HOST": "<your_obsidian_host>",
+    "OBSIDIAN_PORT": "<your_obsidian_port>",
+    "OBSIDIAN_DISABLE_SIMPLE_SEARCH": "true"
+  }
+}
+```
+
 ## Quickstart
 
 ### Install

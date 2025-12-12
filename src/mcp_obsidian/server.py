@@ -44,7 +44,13 @@ def get_tool_handler(name: str) -> tools.ToolHandler | None:
 add_tool_handler(tools.ListFilesInDirToolHandler())
 add_tool_handler(tools.ListFilesInVaultToolHandler())
 add_tool_handler(tools.GetFileContentsToolHandler())
-add_tool_handler(tools.SearchToolHandler())
+
+# Simple search tool can be disabled for large vaults
+if os.getenv("OBSIDIAN_DISABLE_SIMPLE_SEARCH") != "true":
+    add_tool_handler(tools.SearchToolHandler())
+else:
+    logger.info("Simple search tool disabled")
+
 add_tool_handler(tools.PatchContentToolHandler())
 add_tool_handler(tools.AppendContentToolHandler())
 add_tool_handler(tools.PutContentToolHandler())
