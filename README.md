@@ -28,6 +28,11 @@ The use prompts like this:
 - Search for all files where Azure CosmosDb is mentioned and quickly explain to me the context in which it is mentioned
 - Summarize the last meeting notes and put them into a new note 'summary meeting.md'. Add an introduction so that I can send it via email.
 
+## Requirements
+
+- Python >= 3.11
+- `mcp` Python SDK `>=1.1.0,<2.0.0` (pinned in `pyproject.toml`). `mcp-obsidian` currently registers its tool handlers via the `mcp` 1.x low-level `Server` API (`@app.list_tools()` / `@app.call_tool()`), which was removed in `mcp` 2.0. Installing with an unconstrained `mcp>=2.0` will crash at import with `AttributeError: 'Server' object has no attribute 'list_tools'`.
+
 ## Configuration
 
 ### Obsidian REST API Key
@@ -223,6 +228,51 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 }
 ```
 </details>
+
+## Docker
+
+You can run the server in a container instead of installing `uv`/Python locally.
+
+1. Copy `.env.example` to `.env` and fill in your Obsidian REST API key:
+```bash
+cp .env.example .env
+```
+By default `OBSIDIAN_HOST` is set to `host.docker.internal`, which resolves to
+your host machine from inside the container (works on Linux, Mac and Windows).
+
+2. Build the image:
+```bash
+docker compose build
+```
+
+3. Point your MCP client at the container. Since MCP speaks JSON-RPC over
+stdio, the client must run it with stdin attached and no pseudo-TTY — use
+`docker compose run --rm -T`, not `docker compose up`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-obsidian": {
+      "command": "docker",
+      "args": [
+        "compose",
+        "-f",
+        "<dir_to>/mcp-obsidian/docker-compose.yml",
+        "run",
+        "--rm",
+        "-T",
+        "mcp-obsidian"
+      ]
+    }
+  }
+}
+```
+
+You can also run it manually to sanity-check the container starts:
+```bash
+docker compose run --rm -T mcp-obsidian
+```
+(it will sit waiting for a JSON-RPC message on stdin; Ctrl+C to exit)
 
 ## Development
 

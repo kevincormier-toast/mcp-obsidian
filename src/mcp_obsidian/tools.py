@@ -236,7 +236,13 @@ class PatchContentToolHandler(ToolHandler):
    def get_tool_description(self):
        return Tool(
            name=self.name,
-           description="Insert content into an existing note relative to a heading, block reference, or frontmatter field.",
+           description=(
+               "Insert content into an existing note relative to a heading, block reference, "
+               "or frontmatter field. For target_type='heading', target must be the fully "
+               "qualified heading path joined with '::' (e.g. 'Outer::Inner'). Bare heading "
+               "names (without '::') will be auto-qualified if they match exactly one heading "
+               "in the file."
+           ),
            inputSchema={
                "type": "object",
                "properties": {
@@ -257,7 +263,7 @@ class PatchContentToolHandler(ToolHandler):
                    },
                    "target": {
                        "type": "string",
-                       "description": "Target identifier. FOR HEADINGS - READ FILE FIRST, then build path: (1) ALWAYS start with the TOP LEVEL h1 heading (the '# ' heading). (2) Use '::' separator between each level. (3) Include EVERY heading level from h1 down to target. EXAMPLE: File has '# Top Level' then '## Section A' then '### Subsection A1'. To target Subsection A1, you MUST use 'Top Level::Section A::Subsection A1'. WRONG: 'Subsection A1' (missing parents). WRONG: 'Section A::Subsection A1' (missing h1). CORRECT: 'Top Level::Section A::Subsection A1' (complete path from h1). For block references use '^block-id'. For frontmatter use field name."
+                       "description": "Target identifier. FOR HEADINGS - READ FILE FIRST, then build path: (1) ALWAYS start with the TOP LEVEL h1 heading (the '# ' heading). (2) Use '::' separator between each level. (3) Include EVERY heading level from h1 down to target. EXAMPLE: File has '# Top Level' then '## Section A' then '### Subsection A1'. To target Subsection A1, you MUST use 'Top Level::Section A::Subsection A1'. WRONG: 'Subsection A1' (missing parents). WRONG: 'Section A::Subsection A1' (missing h1). CORRECT: 'Top Level::Section A::Subsection A1' (complete path from h1). A bare heading name will be auto-qualified as a fallback if it matches exactly one heading in the file, but prefer the fully qualified path. For block references use '^block-id'. For frontmatter use field name."
                    },
                    "content": {
                        "type": "string",
@@ -295,7 +301,13 @@ class PutContentToolHandler(ToolHandler):
    def get_tool_description(self):
        return Tool(
            name=self.name,
-           description="Create a new file in your vault or update the content of an existing one in your vault.",
+           description=(
+               "Creates a new file, or COMPLETELY OVERWRITES the content of an existing "
+               "file. The previous content is lost. "
+               "Use `obsidian_append_content` to add content to a file without erasing "
+               "what's already there. Use `obsidian_patch_content` to modify a specific "
+               "heading, block or frontmatter field while keeping the rest intact."
+           ),
            inputSchema={
                "type": "object",
                "properties": {
@@ -306,7 +318,7 @@ class PutContentToolHandler(ToolHandler):
                    },
                    "content": {
                        "type": "string",
-                       "description": "Content of the file you would like to upload"
+                       "description": "Full file content. Replaces existing content entirely if the file already exists."
                    }
                },
                "required": ["filepath", "content"]
@@ -434,6 +446,93 @@ class ComplexSearchToolHandler(ToolHandler):
                text=json.dumps(results, indent=2)
            )
        ]
+
+class SearchByTagToolHandler(ToolHandler):
+   def __init__(self):
+       super().__init__("obsidian_search_by_tag")
+
+   def get_tool_description(self):
+       return Tool(
+           name=self.name,
+           description=(
+               "Find all notes carrying a specific tag. Matches the note's parsed "
+               "tag set (YAML frontmatter `tags:` plus inline `#tag` occurrences), "
+               "so hits on the tag name inside ordinary prose are NOT returned. "
+               "Pass the tag without the leading '#'. Hierarchical-tag matching is "
+               "exact — searching for 'work' will not match notes tagged "
+               "'work/tasks'. Optionally scope to a vault subdirectory."
+           ),
+           inputSchema={
+               "type": "object",
+               "properties": {
+                   "tag": {
+                       "type": "string",
+                       "description": "Tag name without the leading '#' (e.g. 'project', 'work/tasks')."
+                   },
+                   "dirpath": {
+                       "type": "string",
+                       "description": "Optional vault-relative directory to scope results to (e.g. 'work/projects'). Trailing slash is stripped."
+                   }
+               },
+               "required": ["tag"]
+           }
+       )
+
+   def run_tool(self, args: dict) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+       if "tag" not in args:
+           raise RuntimeError("tag argument missing in arguments")
+
+       api = obsidian.Obsidian(api_key=api_key, host=obsidian_host)
+       paths = api.search_by_tag(args["tag"], args.get("dirpath"))
+
+       return [
+           TextContent(
+               type="text",
+               text=json.dumps(paths, indent=2)
+           )
+       ]
+
+
+class GetFrontmatterToolHandler(ToolHandler):
+   def __init__(self):
+       super().__init__("obsidian_get_frontmatter")
+
+   def get_tool_description(self):
+       return Tool(
+           name=self.name,
+           description=(
+               "Return just the YAML frontmatter of a note as a parsed JSON "
+               "object. Lighter than obsidian_get_file_contents when you only "
+               "need metadata (tags, aliases, status fields, etc.). Returns "
+               "an empty object for notes without frontmatter."
+           ),
+           inputSchema={
+               "type": "object",
+               "properties": {
+                   "filepath": {
+                       "type": "string",
+                       "description": "Path to the file (relative to vault root)",
+                       "format": "path"
+                   }
+               },
+               "required": ["filepath"]
+           }
+       )
+
+   def run_tool(self, args: dict) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+       if "filepath" not in args:
+           raise RuntimeError("filepath argument missing in arguments")
+
+       api = obsidian.Obsidian(api_key=api_key, host=obsidian_host)
+       fm = api.get_frontmatter(args["filepath"])
+
+       return [
+           TextContent(
+               type="text",
+               text=json.dumps(fm, indent=2)
+           )
+       ]
+
 
 class BatchGetFileContentsToolHandler(ToolHandler):
     def __init__(self):
