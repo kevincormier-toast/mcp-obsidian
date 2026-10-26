@@ -100,7 +100,8 @@ class Obsidian():
                     pass
             code = error_data.get('errorCode', -1)
             message = error_data.get('message', '<unknown>')
-            logger.error(f"HTTP Error {code}: {message}, status_code={e.response.status_code}")
+            status_code = e.response.status_code if e.response is not None else None
+            logger.error(f"HTTP Error {code}: {message}, status_code={status_code}")
             raise Exception(f"Error {code}: {message}")
         except requests.exceptions.SSLError as e:
             logger.error(f"SSL Error: {str(e)}", exc_info=True)
